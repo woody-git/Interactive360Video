@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>360 on-demand Video hosted on AWS using Babylon.js </title>
+    <!-- Babylon.js -->
+    <script src="https://code.jquery.com/pep/0.4.2/pep.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.6.2/dat.gui.min.js"></script>
+    <script src="https://preview.babylonjs.com/ammo.js"></script>
+    <script src="https://preview.babylonjs.com/cannon.js"></script>
+    <script src="https://preview.babylonjs.com/Oimo.js"></script>
+    <script src="https://preview.babylonjs.com/earcut.min.js"></script>
+    <script src="https://preview.babylonjs.com/babylon.js"></script>
+    <script src="https://preview.babylonjs.com/inspector/babylon.inspector.bundle.js">
+    </script>
+    <script src="https://player.live-video.net/1.2.0/amazon-ivs-player.min.js"></script>
+    <script src="https://preview.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+    <script src="https://preview.babylonjs.com/proceduralTexturesLibrary/babylonjs.proceduralTextures.min.js"></script>
+    <script src="https://preview.babylonjs.com/postProcessesLibrary/babylonjs.postProcess.min.js"></script>
+    <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.js"></script>
+    <script src="https://preview.babylonjs.com/serializers/babylonjs.serializers.min.js"></script>
+    <script src="https://preview.babylonjs.com/gui/babylon.gui.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+    <style>
+        html,
+        body {
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #renderCanvas {
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="renderCanvas"></canvas>
+    <script>
+        //var london_stream = "https://d2qe71khnvv5m1.cloudfront.net/stream/index.m3u8"
+        var london_stream = "https://e80806210fc8.eu-west-1.playback.live-video.net/api/video/v1/eu-west-1.763989535729.channel.Iqu0R28JfAzs.m3u8"
+        var london_text = "This camera is a live 360° camera with adaptive resolution. Click here to force 4K."
+        //var thailand_stream = "https://d2qe71khnvv5m1.cloudfront.net/stream/index_3840x2160.m3u8"
+        var thailand_stream = "https://e80806210fc8.eu-west-1.playback.live-video.net/api/video/v1/eu-west-1.763989535729.channel.Iqu0R28JfAzs.m3u8"
+        var thailand_text = "You are now in a live 4K streaming! Click again to return back to adaptive resolution." 
+        var text_block = "Welcome! This is an example of a 360-degree video captured and  overlayed with dynamic elements.\n\n" + 
+        "On initial load the video is paused. Click on the horizon / background to start playing.This experience uses Amazon S3 to deliver the webpage," + 
+        "Amazon Cloudfront to deliver the on-demand video, and pipeline managed via AWS Amplify.\n\n"+
+        "The 3D/VR experience is powered via WebXR and uses Babylon.js for development.If you haven't joined with a VR headset"+
+        " and you have easy access to one, try returning to this page with the VR headset and click the VR Icon to enter a fully immersive experience.\n\n"+
+        "The goal is creating not only a 360-player, but a fully immersive AND interactive experince through WebXR and hosted on AWS.\n\n" +
+        "Enjoy!"
+        var canvas = document.getElementById("renderCanvas");
+        var engine = null;
+        var scene = null;
+        var sceneToRender = null;
+        var createDefaultEngine = function () {
+            return new
+                BABYLON.Engine(canvas, true, {
+                    preserveDrawingBuffer: true, stencil:
+                        true
+                });
+        };
+        var url = "https://cdn.jsdelivr.net/npm/hls.js@latest";
+        var s = document.createElement("script");
+        s.type = "text/javascript";
+        s.src = url;
+        document.head.appendChild(s);
+        var createScene = async function () {
+            engine.displayLoadingUI();
+            var stream1 = london_stream;
+            var button_text = london_text;
+            //var video = $("<video autoplay playsinline id='video_stream' src = '"+stream1+"' ></video > ");
+            var video = $("<video playsinline id='video_stream'></video>");
+            $("body").append(video);
+
+            if (IVSPlayer.isPlayerSupported) {
+                const player = IVSPlayer.create();
+                player.attachHTMLVideoElement(document.getElementById('video_stream'));
+                player.load(stream1);
+                player.play();
+            }
+
+            console.log("Adding HTML video element");
+            // Create the scene space
+            var scene = new BABYLON.Scene(engine);
+            var manager = new BABYLON.GUI.GUI3DManager(scene);
+            // scene.debugLayer.show();
+            // Add a camera to the scene and attach it to the canvas
+            var camera = new BABYLON.ArcRotateCamera("Camera", Math.PI / 2, Math.PI / 2, 0, BABYLON.Vector3.Zero(), scene);
+            camera.minZ = 0.1;
+            camera.attachControl(canvas, true);
+            // Add lights to the scene
+            var light = new BABYLON.DirectionalLight("dir", new BABYLON.Vector3(0, -1.5, 0), scene);
+            var worldGround = BABYLON.MeshBuilder.CreateGround('worldGround', {
+                    width: 4, height: 4,
+                    subdivisions: 4
+                }, scene);
+            worldGround.position = new BABYLON.Vector3(0, 0, 0)
+            grid = new BABYLON.GridMaterial('gridMaterial', scene);
+            grid.gridRatio = 20;
+            worldGround.material = grid;
+            //Create GUI Meshes -- each AdvancedTexture must be created to work in VR
+            var guimesh1 = BABYLON.Mesh.CreatePlane("guimesh1", 3);
+            guimesh1.position = new BABYLON.Vector3(8, 3, 0);
+            guimesh1.rotation.y = Math.PI / 2;
+            var advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateForMesh(guimesh1);
+            var guimesh2 = BABYLON.Mesh.CreatePlane("guimesh2", 5);
+            guimesh2.position = new BABYLON.Vector3(-8, 3, 0);
+            guimesh2.rotation.y = 3 * Math.PI / 2;
+            var advancedTexture2 = BABYLON.GUI.AdvancedDynamicTexture.CreateForMesh(guimesh2);
+            var guimesh3 = BABYLON.Mesh.CreatePlane("guimesh3", 2);
+            guimesh3.position = new BABYLON.Vector3(0, 1, -2);
+            guimesh3.rotation.y = Math.PI;
+            var advancedTexture3 = BABYLON.GUI.AdvancedDynamicTexture.CreateForMesh(guimesh3);
+            var guimesh4 = BABYLON.Mesh.CreatePlane("guimesh4", 2);
+            guimesh4.position = new BABYLON.Vector3(0, 1, -2);
+            guimesh4.rotation.y = Math.PI;
+            var advancedTexture4 = BABYLON.GUI.AdvancedDynamicTexture.CreateForMesh(guimesh4);
+            //MOTD
+            var motdBackground = new BABYLON.GUI.Rectangle();
+            motdBackground.width = 1;
+            motdBackground.height = .75;
+            motdBackground.cornerRadius = 5;
+            motdBackground.color = "Orange";
+            motdBackground.thickness = 4;
+            motdBackground.background = "gray";
+            var motdText = new BABYLON.GUI.TextBlock();
+            motdText.textWrapping = BABYLON.GUI.TextWrapping.WordWrap;
+            motdText.resizeToFit = true;
+            motdText.paddingTop = "5%";
+            motdText.paddingLeft = "30px";
+            motdText.paddingRight = "20px"
+            motdText.paddingBottom = "5%";
+            motdText.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
+            //motdText.verticalAlignment =  BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
+            motdText.textHorizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
+            motdText.textVerticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
+            motdText.color = "white";
+            motdText.background = "yellow";
+            motdText.text = text_block
+            motdText.fontSize = 30;
+            // DUMMY BUTTON
+            var button1 = BABYLON.GUI.Button.CreateSimpleButton("but1", button_text);
+            button1.width = .75;
+            button1.height = 0.4;
+            button1.color = "white";
+            button1.fontSize = 50;
+            button1.background = "green";
+            button1.position = new BABYLON.Vector3(5, 15, 3);
+            button1.onPointerUpObservable.add(function () {
+                // update video steam
+                if (stream1 === london_stream) {
+                    stream1 = thailand_stream;
+                    button_text = thailand_text;
+                } else {
+                    stream1 = london_stream;
+                    button_text = london_text;
+                }
+                s.onload()
+            });
+            //addGUI elements to GUIMesh already on scene
+            advancedTexture.addControl(button1);
+            //MY MOD
+            //advancedTexture3.addControl(motdBackground);
+            //advancedTexture4.addControl(motdText);
+            // Create 360 World Mesh
+            var TV = BABYLON.MeshBuilder.CreateSphere("myPlane", { diameter: 20 }, scene);
+            TV.position = new BABYLON.Vector3(0, 3, 0);
+            TV.actionManager = new BABYLON.ActionManager(scene);
+            s.onload = function () {
+                button1.textBlock.text = button_text
+                // Video material onto sphere
+                videoMat = new BABYLON.StandardMaterial("textVid", scene);
+                var video = document.querySelector('video');
+                var videoTexture = new BABYLON.VideoTexture('video', video, scene, true, true);
+                videoMat.backFaceCulling = false;
+                videoMat.diffuseTexture = videoTexture;
+                videoMat.emissiveColor = BABYLON.Color3.White();
+                TV.material = videoMat;
+                var htmlVideo = videoTexture.video;
+                if (Hls.isSupported()) {
+                    var hls = new Hls();
+                    hls.loadSource(stream1);
+                    hls.attachMedia(video);
+                    engine.hideLoadingUI();
+                    hls.on(Hls.Events.MANIFEST_PARSED, function () {
+                        TV.actionManager.registerAction(
+                            new
+                                BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPickTrigger,
+                                    function (event) {
+                                        htmlVideo.play();
+                                    })
+                        );
+                    });
+                } else if
+                    (video.canPlayType('application/vnd.apple.mpegurl')) {
+                    video.src = stream1;
+                    engine.hideLoadingUI();
+                    video.addEventListener('loadedmetadata', function () {
+                        TV.actionManager.registerAction(
+                            new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPickTrigger, function (event) {
+                                htmlVideo.play();
+                            })
+                        );
+                    });
+                }
+            }
+            //add VR {floorMeshes: [worldGround]}
+            var xr = await scene.createDefaultXRExperienceAsync();
+            return scene;
+        };
+        //init
+        var engine;
+        try {
+            engine = createDefaultEngine();
+        } catch (e) {
+            console.log("the available createEngine function failed. Creating the default engine instead");
+            engine = createDefaultEngine();
+        }
+        if (!engine) throw 'engine should not be null.';
+        scene = createScene();;
+        scene.then(returnedScene => { sceneToRender = returnedScene; });
+        engine.runRenderLoop(function () {
+            if (sceneToRender) {
+                sceneToRender.render();
+            }
+        });
+        // Resize
+        window.addEventListener("resize", function () {
+            engine.resize();
+        });
+    </script>
+</body>
+
+</html>
