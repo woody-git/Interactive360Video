@@ -43,19 +43,13 @@
 <body>
     <canvas id="renderCanvas"></canvas>
     <script>
-        //var london_stream = "https://d2qe71khnvv5m1.cloudfront.net/stream/index.m3u8"
-        var london_stream = "https://e80806210fc8.eu-west-1.playback.live-video.net/api/video/v1/eu-west-1.763989535729.channel.Iqu0R28JfAzs.m3u8"
-        var london_text = "This camera is a live 360° camera with adaptive resolution. Click here to force 4K."
-        //var thailand_stream = "https://d2qe71khnvv5m1.cloudfront.net/stream/index_3840x2160.m3u8"
-        var thailand_stream = "https://e80806210fc8.eu-west-1.playback.live-video.net/api/video/v1/eu-west-1.763989535729.channel.Iqu0R28JfAzs.m3u8"
-        var thailand_text = "You are now in a live 4K streaming! Click again to return back to adaptive resolution." 
-        var text_block = "Welcome! This is an example of a 360-degree video captured and  overlayed with dynamic elements.\n\n" + 
-        "On initial load the video is paused. Click on the horizon / background to start playing.This experience uses Amazon S3 to deliver the webpage," + 
-        "Amazon Cloudfront to deliver the on-demand video, and pipeline managed via AWS Amplify.\n\n"+
-        "The 3D/VR experience is powered via WebXR and uses Babylon.js for development.If you haven't joined with a VR headset"+
-        " and you have easy access to one, try returning to this page with the VR headset and click the VR Icon to enter a fully immersive experience.\n\n"+
-        "The goal is creating not only a 360-player, but a fully immersive AND interactive experince through WebXR and hosted on AWS.\n\n" +
-        "Enjoy!"
+        //var stream_main = "https://d2qe71khnvv5m1.cloudfront.net/stream/index.m3u8"
+        var stream_main = "https://e80806210fc8.eu-west-1.playback.live-video.net/api/video/v1/eu-west-1.763989535729.channel.Iqu0R28JfAzs.m3u8"
+        var stream_main_text = "This camera is a live 360° camera with adaptive resolution. Click here to force 4K."
+        //var stream_secondary = "https://d2qe71khnvv5m1.cloudfront.net/stream/index_3840x2160.m3u8"
+        var stream_secondary = "https://e80806210fc8.eu-west-1.playback.live-video.net/api/video/v1/eu-west-1.763989535729.channel.Iqu0R28JfAzs.m3u8"
+        var stream_secondary_text = "You are now in a live 4K streaming! Click again to return back to adaptive resolution." 
+        
         var canvas = document.getElementById("renderCanvas");
         var engine = null;
         var scene = null;
@@ -74,8 +68,8 @@
         document.head.appendChild(s);
         var createScene = async function () {
             engine.displayLoadingUI();
-            var stream1 = london_stream;
-            var button_text = london_text;
+            var stream1 = stream_main;
+            var button_text = stream_main_text;
             //var video = $("<video autoplay playsinline id='video_stream' src = '"+stream1+"' ></video > ");
             var video = $("<video playsinline id='video_stream'></video>");
             $("body").append(video);
@@ -156,12 +150,12 @@
             button1.position = new BABYLON.Vector3(5, 15, 3);
             button1.onPointerUpObservable.add(function () {
                 // update video steam
-                if (stream1 === london_stream) {
-                    stream1 = thailand_stream;
-                    button_text = thailand_text;
+                if (stream1 === stream_main) {
+                    stream1 = stream_secondary;
+                    button_text = stream_secondary_text;
                 } else {
-                    stream1 = london_stream;
-                    button_text = london_text;
+                    stream1 = stream_main;
+                    button_text = stream_main_text;
                 }
                 s.onload()
             });
