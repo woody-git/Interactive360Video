@@ -20,6 +20,8 @@ You can reference the 4K manifest, directly in the "stream_secondary" variable o
 
 **Setup IVS**
 
+![](/360VideoArchIVS.png)
+
 This option uses the player with Amazon Interactive Video Service and integrates the IVS player with Babylons.js scene in order to create an ultra low latency 360 video live experience (2 to 5 sec latency). In order to obtain ULL on a VR headset, you need to use a browser supporting IVS player.
 At the moment this player has been tested with Firefox VR on Oculus Quest.
 
