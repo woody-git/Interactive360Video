@@ -4,9 +4,9 @@ This reposistory provide a simple web player that creates a WebXR scene, using B
 
 You can use this player with AWS Elemental Media Services or with Amazon Interactive Video Service.
 
-Reference Architecture
-
 **Using the player with AWS Elemental MediaLive**
+
+![](/360VideoArch.png)
 
 With this solution you can stream a 360 live video with an upscaling to 4K. The following implementation, using the default AWS Live Solution can let you stream a 4K scene with an average latency of 15sec.
 
